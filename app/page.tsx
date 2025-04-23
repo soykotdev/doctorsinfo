@@ -133,8 +133,8 @@ function HomePageContent() {
 
   return (
     <div className={styles.pageContainer}>
-      <h1>Find the Best Doctor In Bangladesh</h1>
-      <p>Discover leading medical professionals across various specialties in Bangladesh. Our featured doctors are highly experienced and dedicated to providing excellent healthcare.</p>
+      <h1 className={styles.heading1}>Find the Best Doctor In Bangladesh</h1>
+      <p className={styles.paragraph}>Discover leading medical professionals across various specialties in Bangladesh. Our featured doctors are highly experienced and dedicated to providing excellent healthcare.</p>
 
       {/* Filter Dropdown */}
       <div className={styles.filterContainer}>
