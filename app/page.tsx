@@ -12,20 +12,23 @@ interface Doctor {
   Specialty: string; // Keep specialty if needed elsewhere, or remove if only for grid
 }
 
-// Helper function to shuffle an array (Fisher-Yates shuffle)
-function shuffleArray<T>(array: T[]): T[] {
-  let currentIndex = array.length, randomIndex;
-  const newArray = [...array]; // Create a copy
+// Helper function to shuffle an array (Fisher-Yates shuffle) with a seed
+function shuffleArray<T>(array: T[], seed: number): T[] {
+  let currentIndex = array.length;
+  const newArray = [...array];
+  let m = seed;
 
-  // While there remain elements to shuffle.
+  function random() {
+    m = (m * 9301 + 49297) % 233280;
+    return m / 233280;
+  }
+
   while (currentIndex !== 0) {
-    // Pick a remaining element.
-    randomIndex = Math.floor(Math.random() * currentIndex);
+    const randomIndex = Math.floor(random() * currentIndex);
     currentIndex--;
-
-    // And swap it with the current element.
     [newArray[currentIndex], newArray[randomIndex]] = [
-      newArray[randomIndex], newArray[currentIndex]];
+      newArray[randomIndex], newArray[currentIndex],
+    ];
   }
 
   return newArray;
@@ -62,10 +65,10 @@ function HomePageContent() {
 
         // Initial filter based on selectedSpecialty (which might come from URL)
         if (selectedSpecialty === 'All') {
-          const shuffledDoctors = shuffleArray(data);
+          const shuffledDoctors = shuffleArray(data, 12345);
           setFilteredDoctors(shuffledDoctors.slice(0, 10));
         } else {
-          const filtered = data.filter(doc => doc.Specialty === selectedSpecialty);
+          const filtered = data.filter((doc: Doctor) => doc.Specialty === selectedSpecialty);
           setFilteredDoctors(filtered);
         }
 
@@ -81,20 +84,20 @@ function HomePageContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
-  // Effect to filter doctors when selectedSpecialty changes (triggered by dropdown or URL change)
-  useEffect(() => {
-    // No need to re-fetch, just filter the existing allDoctors list
-    if (!loading) { // Only filter after initial data load
-        if (selectedSpecialty === 'All') {
-          // Reshuffle and take first 10 when 'All' is selected
-          const shuffledDoctors = shuffleArray(allDoctors);
-          setFilteredDoctors(shuffledDoctors.slice(0, 10));
-        } else {
-          const filtered = allDoctors.filter(doc => doc.Specialty === selectedSpecialty);
-          setFilteredDoctors(filtered);
-        }
-    }
-  }, [selectedSpecialty, allDoctors, loading]); // Re-run when filter, data, or loading state changes
+    // Effect to filter doctors when selectedSpecialty changes (triggered by dropdown or URL change)
+    useEffect(() => {
+      // No need to re-fetch, just filter the existing allDoctors list
+      if (!loading) { // Only filter after initial data load
+          if (selectedSpecialty === 'All') {
+            // Reshuffle and take first 10 when 'All' is selected
+            const shuffledDoctors = shuffleArray(allDoctors, 12345); // Use a constant seed
+            setFilteredDoctors(shuffledDoctors.slice(0, 10));
+          } else {
+            const filtered = allDoctors.filter((doc: Doctor) => doc.Specialty === selectedSpecialty);
+            setFilteredDoctors(filtered);
+          }
+      }
+    }, [selectedSpecialty, allDoctors, loading]); // Re-run when filter, data, or loading state changes
 
     // Effect to update selectedSpecialty state if URL query param changes
   useEffect(() => {
