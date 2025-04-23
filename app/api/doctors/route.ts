@@ -9,17 +9,22 @@ interface Doctor {
 }
 
 export async function GET() {
-  const results: Doctor[] = [];
-
-  return new Promise((resolve, reject) => {
-    fs.createReadStream('data/doctor_info.csv')
-      .pipe(csv())
-      .on('data', (data: any) => results.push(data))
-      .on('end', () => {
-        resolve(NextResponse.json(results));
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
-  });
+  try {
+    const results: Doctor[] = await new Promise((resolve, reject) => {
+      const results: Doctor[] = [];
+      fs.createReadStream('data/doctor_info.csv')
+        .pipe(csv())
+        .on('data', (data: any) => results.push(data))
+        .on('end', () => {
+          resolve(results);
+        })
+        .on('error', (error) => {
+          reject(error);
+        });
+    });
+    return NextResponse.json(results);
+  } catch (error) {
+    console.error("Error reading doctor info:", error);
+    return NextResponse.json({ error: "Failed to read doctor info" }, { status: 500 });
+  }
 }
