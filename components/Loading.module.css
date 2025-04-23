@@ -1,0 +1,34 @@
+/* Loading.module.css */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e9ecef;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 0.5s linear infinite; /* Reduced animation duration to 0.5s */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContainer p {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #6c757d;
+}

@@ -1,0 +1,17 @@
+/* Scoped styles for the Contact page */
+.contactContainer {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.contactContainer h1 {
+  color: #0056b3;
+  margin-bottom: 20px;
+}
+
+.contactContainer p {
+  margin-bottom: 10px;
+}

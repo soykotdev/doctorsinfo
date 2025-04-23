@@ -1,0 +1,42 @@
+.footer {
+  background-color: #f8f9fa;
+  padding: 20px 0;
+  text-align: center;
+  border-top: 1px solid #e9ecef;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.contactInfo {
+  margin-top: 10px;
+}
+
+.links {
+  margin-bottom: 10px;
+}
+
+.links a {
+  margin: 0 10px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+.copyright {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px;
+  }
+}
