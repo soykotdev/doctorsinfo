@@ -127,21 +127,21 @@
   width: 100%;
 }
 
-/* Mobile Optimization */
-@media (max-width: 768px) {
-  .pageContainer {
-    padding: 15px;
-  }
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .pageContainer {
+      padding: 15px;
+    }
 
-  :global(h1) {
+  .heading1 {
     font-size: 2em;
   }
 
-  :global(h2) {
+  .heading2 {
     font-size: 1.5em;
   }
 
-  :global(p) {
+  .paragraph {
     font-size: 1em;
   }
 
