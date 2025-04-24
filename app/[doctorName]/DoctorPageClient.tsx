@@ -82,9 +82,11 @@ export default function DoctorPageClient({ doctorName }: DoctorPageClientProps) 
     fetchData();
     
     return () => {
-      // Cleanup
+      // Cleanup when component unmounts
       setDoctor(null);
       setError(null);
+      setLoading(true);
+      setRetryCount(0);
     };
   }, [fetchData]);
 

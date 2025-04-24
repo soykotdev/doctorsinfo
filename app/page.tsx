@@ -39,11 +39,38 @@ function HomePageContent() {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
+  // Update selected specialty when URL changes
+  useEffect(() => {
+    if (urlSpecialty) {
+      setSelectedSpecialty(urlSpecialty);
+      setCurrentPage(1);
+    }
+  }, [urlSpecialty]);
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // First fetch all doctors to get complete specialties list
+      const allDoctorsResponse = await fetch('/api/doctors', {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (!allDoctorsResponse.ok) {
+        const errorData = await allDoctorsResponse.json();
+        throw new Error(errorData.error || 'Failed to fetch doctors');
+      }
+
+      const allDoctorsData = await allDoctorsResponse.json();
+      const uniqueSpecialties = ['All', ...new Set(allDoctorsData.doctors.map((doc: Doctor) => doc.Specialty))].sort() as string[];
+      setSpecialties(uniqueSpecialties);
+
+      // Then fetch filtered doctors if a specialty is selected
       const queryParams = new URLSearchParams();
       if (selectedSpecialty !== 'All') {
         queryParams.set('specialty', selectedSpecialty);
@@ -51,34 +78,33 @@ function HomePageContent() {
       queryParams.set('page', currentPage.toString());
       queryParams.set('pageSize', itemsPerPage.toString());
 
-      const response = await fetch(`/api/doctors?${queryParams.toString()}`, {
+      const filteredResponse = await fetch(`/api/doctors?${queryParams.toString()}`, {
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!filteredResponse.ok) {
+        const errorData = await filteredResponse.json();
         throw new Error(errorData.error || 'Failed to fetch doctors');
       }
 
-      const data = await response.json();
+      const data = await filteredResponse.json();
       
       if (!data.doctors || !Array.isArray(data.doctors)) {
         throw new Error('Invalid data format received from server');
       }
-
-      // Get unique specialties from the data
-      const uniqueSpecialties = ['All', ...new Set(data.doctors.map((doc: Doctor) => doc.Specialty))] as string[];
-      setSpecialties(uniqueSpecialties);
 
       setDoctors(data.doctors);
       setTotalPages(data.totalPages);
 
       // Set featured doctors only when on the first page and specialty is 'All'
       if (currentPage === 1 && selectedSpecialty === 'All') {
-        setFeaturedDoctors(getRandomDoctors(data.doctors, 10));
+        setFeaturedDoctors(getRandomDoctors(allDoctorsData.doctors, 10));
+      } else {
+        setFeaturedDoctors([]);
       }
 
       setRetryCount(0);
@@ -97,9 +123,30 @@ function HomePageContent() {
     }
   }, [currentPage, selectedSpecialty, retryCount]);
 
+  // Effect for initial data fetch and cleanup
   useEffect(() => {
+    // Reset states when component mounts
+    setDoctors([]);
+    setLoading(true);
+    setError(null);
+    setRetryCount(0);
+    setSelectedSpecialty(urlSpecialty || 'All');
+    setFeaturedDoctors([]);
+    setCurrentPage(1);
+    setTotalPages(1);
+    
+    // Fetch fresh data
     fetchData();
-  }, [fetchData]);
+
+    // Cleanup function
+    return () => {
+      setDoctors([]);
+      setLoading(false);
+      setError(null);
+      setRetryCount(0);
+      setFeaturedDoctors([]);
+    };
+  }, [fetchData, urlSpecialty]);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -108,7 +155,7 @@ function HomePageContent() {
 
   const handleSpecialtyChange = (specialty: string) => {
     setSelectedSpecialty(specialty);
-    setCurrentPage(1); // Reset to first page when changing specialty
+    setCurrentPage(1);
   };
 
   const isHomePage = pathname === '/';
@@ -271,9 +318,12 @@ function HomePageContent() {
 }
 
 export default function HomePage() {
+  // Add a random key to force component remount when navigating back
+  const randomKey = Math.random();
+  
   return (
     <ErrorBoundary>
-      <HomePageContent />
+      <HomePageContent key={randomKey} />
     </ErrorBoundary>
   );
 }

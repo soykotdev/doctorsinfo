@@ -107,14 +107,12 @@ export async function GET(request: Request) {
     
     let query: any = {};
     
-    // Build query based on parameters with more flexible matching
     if (name) {
-      // Split the name into parts and create a regex that matches any part
       const nameParts = name.split(' ').filter(part => part.length > 0);
       const nameRegex = nameParts.map(part => `(?=.*${part})`).join('');
       query["Doctor Name"] = { 
         $regex: nameRegex,
-        $options: 'i' 
+        $options: 'i'
       };
     }
     
@@ -128,13 +126,15 @@ export async function GET(request: Request) {
     // Get total count for pagination
     const total = await collection.countDocuments(query);
     
-    // Fetch paginated results
-    const doctors = (await collection
-      .find(query)
-      .sort({ "Doctor Name": 1 })
-      .skip(skip)
-      .limit(pageSize)
-      .toArray()) as Doctor[];
+    // Fetch randomized paginated results using aggregation pipeline
+    const doctors = await collection
+      .aggregate([
+        { $match: query },
+        { $sample: { size: total } }, // Randomize all matching documents
+        { $skip: skip },
+        { $limit: pageSize }
+      ])
+      .toArray() as Doctor[];
     
     if (!doctors || doctors.length === 0) {
       return NextResponse.json(
@@ -153,7 +153,9 @@ export async function GET(request: Request) {
     
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'X-Total-Count': total.toString(),
         'X-Page-Count': Math.ceil(total / pageSize).toString(),
         'X-Current-Page': page.toString()
