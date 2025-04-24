@@ -1,17 +1,90 @@
-/* Scoped styles for the Contact page */
 .contactContainer {
-  padding: 20px;
+  padding: 40px 20px;
   max-width: 800px;
   margin: 0 auto;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.pageTitle {
+  font-size: 2.5em;
+  color: #2d3748;
+  margin-bottom: 1.5em;
   text-align: center;
-  font-family: Arial, sans-serif;
+  background: linear-gradient(45deg, #1a365d, #2b6cb0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.contactContainer h1 {
-  color: #0056b3;
-  margin-bottom: 20px;
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  align-items: center;
 }
 
-.contactContainer p {
-  margin-bottom: 10px;
+.contactInfo {
+  display: grid;
+  gap: 1.5em;
+  width: 100%;
+  max-width: 500px;
+}
+
+.infoCard {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.infoCard:hover {
+  transform: translateY(-3px);
+}
+
+.infoLabel {
+  font-size: 1.1em;
+  color: #2b6cb0;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.infoValue {
+  font-size: 1.2em;
+  color: #4a5568;
+  margin: 0;
+}
+
+.infoValue a {
+  color: #2b6cb0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.infoValue a:hover {
+  color: #1a365d;
+  text-decoration: underline;
+}
+
+.address {
+  margin-top: 2em;
+  text-align: center;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .contactContainer {
+    padding: 20px;
+  }
+
+  .pageTitle {
+    font-size: 2em;
+    margin-bottom: 1em;
+  }
+
+  .infoCard {
+    padding: 15px;
+  }
 }

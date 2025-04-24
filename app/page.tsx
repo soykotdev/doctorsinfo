@@ -1,188 +1,279 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react'; // Import Suspense
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation'; // Import useSearchParams
-import styles from './HomePage.module.css'; // Import home page styles
+import { useSearchParams, usePathname } from 'next/navigation';
+import styles from './HomePage.module.css';
+import Loading from '../components/Loading';
+import ErrorDisplay from '../components/ErrorDisplay';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 interface Doctor {
   "Doctor Name": string;
-  "Photo URL": string; // Need Photo URL for the grid
-  Designation: string; // Need Designation for the grid
-  Specialty: string; // Keep specialty if needed elsewhere, or remove if only for grid
+  "Photo URL": string;
+  Degree: string;
+  Specialty: string;
+  Designation: string;
+  Workplace: string;
+  About: string;
 }
 
-// Helper function to shuffle an array (Fisher-Yates shuffle) with a seed
-function shuffleArray<T>(array: T[], seed: number): T[] {
-  let currentIndex = array.length;
-  const newArray = [...array];
-  let m = seed;
+const getRandomDoctors = (doctors: Doctor[], count: number) => {
+  const shuffled = [...doctors].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
 
-  function random() {
-    m = (m * 9301 + 49297) % 233280;
-    return m / 233280;
-  }
-
-  while (currentIndex !== 0) {
-    const randomIndex = Math.floor(random() * currentIndex);
-    currentIndex--;
-    [newArray[currentIndex], newArray[randomIndex]] = [
-      newArray[randomIndex], newArray[currentIndex],
-    ];
-  }
-
-  return newArray;
-}
-
-// Wrap the main component logic in a new component to use Suspense
 function HomePageContent() {
   const searchParams = useSearchParams();
-  const initialSpecialty = searchParams.get('specialty') || 'All'; // Get specialty from URL or default to 'All'
-
-  const [allDoctors, setAllDoctors] = useState<Doctor[]>([]); // Store all fetched doctors
-  const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]); // Store doctors to display
-  const [specialties, setSpecialties] = useState<string[]>([]); // Store unique specialties
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>(initialSpecialty); // Initialize with URL param
+  const pathname = usePathname();
+  const urlSpecialty = searchParams.get('specialty');
+  
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [selectedSpecialty, setSelectedSpecialty] = useState(urlSpecialty || 'All');
+  const [specialties, setSpecialties] = useState<string[]>(['All']);
+  const [featuredDoctors, setFeaturedDoctors] = useState<Doctor[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch('/api/doctors');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch doctors: ${response.statusText}`);
-        }
-        const data: Doctor[] = await response.json();
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        setAllDoctors(data); // Store all doctors
-
-        // Extract unique specialties
-        const uniqueSpecialties = ['All', ...new Set(data.map(doc => doc.Specialty).filter(Boolean))];
-        setSpecialties(uniqueSpecialties);
-
-        // Initial filter based on selectedSpecialty (which might come from URL)
-        if (selectedSpecialty === 'All') {
-          const shuffledDoctors = shuffleArray(data, 12345);
-          setFilteredDoctors(shuffledDoctors.slice(0, 10));
-        } else {
-          const filtered = data.filter((doc: Doctor) => doc.Specialty === selectedSpecialty);
-          setFilteredDoctors(filtered);
-        }
-
-      } catch (err) {
-        console.error("Error fetching doctors:", err);
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
+      const queryParams = new URLSearchParams();
+      if (selectedSpecialty !== 'All') {
+        queryParams.set('specialty', selectedSpecialty);
       }
-    };
+      queryParams.set('page', currentPage.toString());
+      queryParams.set('pageSize', itemsPerPage.toString());
 
-    fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+      const response = await fetch(`/api/doctors?${queryParams.toString()}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
 
-    // Effect to filter doctors when selectedSpecialty changes (triggered by dropdown or URL change)
-    useEffect(() => {
-      // No need to re-fetch, just filter the existing allDoctors list
-      if (!loading) { // Only filter after initial data load
-          if (selectedSpecialty === 'All') {
-            // Reshuffle and take first 10 when 'All' is selected
-            const shuffledDoctors = shuffleArray(allDoctors, 12345); // Use a constant seed
-            setFilteredDoctors(shuffledDoctors.slice(0, 10));
-          } else {
-            const filtered = allDoctors.filter((doc: Doctor) => doc.Specialty === selectedSpecialty);
-            setFilteredDoctors(filtered);
-          }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch doctors');
       }
-    }, [selectedSpecialty, allDoctors, loading]); // Re-run when filter, data, or loading state changes
 
-    // Effect to update selectedSpecialty state if URL query param changes
-  useEffect(() => {
-    const currentSpecialty = searchParams.get('specialty') || 'All';
-    if (currentSpecialty !== selectedSpecialty) {
-        setSelectedSpecialty(currentSpecialty);
+      const data = await response.json();
+      
+      if (!data.doctors || !Array.isArray(data.doctors)) {
+        throw new Error('Invalid data format received from server');
+      }
+
+      // Get unique specialties from the data
+      const uniqueSpecialties = ['All', ...new Set(data.doctors.map((doc: Doctor) => doc.Specialty))] as string[];
+      setSpecialties(uniqueSpecialties);
+
+      setDoctors(data.doctors);
+      setTotalPages(data.totalPages);
+
+      // Set featured doctors only when on the first page and specialty is 'All'
+      if (currentPage === 1 && selectedSpecialty === 'All') {
+        setFeaturedDoctors(getRandomDoctors(data.doctors, 10));
+      }
+
+      setRetryCount(0);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching data';
+      setError(errorMessage);
+
+      if (retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, 1000 * Math.pow(2, retryCount));
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [searchParams, selectedSpecialty]);
+  }, [currentPage, selectedSpecialty, retryCount]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  // Function to create a URL-friendly slug from the doctor's name
-  const createSlug = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Basic check for valid URL
+  const handleSpecialtyChange = (specialty: string) => {
+    setSelectedSpecialty(specialty);
+    setCurrentPage(1); // Reset to first page when changing specialty
+  };
+
+  const isHomePage = pathname === '/';
+
   const isValidUrl = (url: string) => {
+    if (!url) return false;
     try {
-      new URL(url);
-      return true;
+      const parsed = new URL(url);
+      // Check for common image extensions
+      return /\.(jpg|jpeg|png|gif|webp)$/i.test(parsed.pathname);
     } catch (_) {
       return false;
     }
   };
 
-  if (loading) {
-    return <main className={styles.pageContainer}><h1>Loading Doctors...</h1></main>;
-  }
-
-  if (error) {
-    return <main className={styles.pageContainer}><h1>Error loading doctors: {error}</h1></main>;
-  }
-
   return (
-    <div className={styles.pageContainer}>
-      <h1 className={styles.heading1}>Find the Best Doctor In Bangladesh</h1>
-      <p className={styles.paragraph}>Discover leading medical professionals across various specialties in Bangladesh. Our featured doctors are highly experienced and dedicated to providing excellent healthcare.</p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Find Your Doctor</h1>
+      
+      {isHomePage && featuredDoctors.length > 0 && (
+        <section className={styles.featuredSection}>
+          <h2>Featured Doctors</h2>
+          <div className={styles.featuredGrid}>
+            {featuredDoctors.map((doctor) => (
+              <Link 
+                href={`/${encodeURIComponent(doctor["Doctor Name"])}`}
+                key={`featured-${doctor["Doctor Name"]}`}
+                className={styles.featuredDoctorCard}
+              >
+                <div className={styles.featuredDoctorImage}>
+                  {isValidUrl(doctor["Photo URL"]) ? (
+                    <img
+                      src={doctor["Photo URL"]}
+                      alt={doctor["Doctor Name"]}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = '/placeholder-image.png';
+                      }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <img
+                      src="/placeholder-image.png"
+                      alt="Doctor photo not available"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                <div className={styles.featuredDoctorInfo}>
+                  <h3>{doctor["Doctor Name"]}</h3>
+                  <p>{doctor.Specialty}</p>
+                  <p>{doctor.Designation}</p>
+                  <p className={styles.workplace}>{doctor.Workplace}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Filter Dropdown */}
-      <div className={styles.filterContainer}>
-        <label htmlFor="specialty-filter">Filter by Specialty:</label>
-        <select
-          id="specialty-filter"
-          value={selectedSpecialty}
-          onChange={(e) => setSelectedSpecialty(e.target.value)}
-          className={styles.filterSelect} style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px', fontSize: '1em', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s ease-in-out', width: '100%', textAlign: 'center' }}
-        >
-          {specialties.map(specialty => (
-            <option key={specialty} value={specialty}>{specialty}</option>
-          ))}
-        </select>
+      <div className={styles.filterSection}>
+        <div className={styles.filterHeader}>
+          <h2>Find Doctors by Specialty</h2>
+        </div>
+        <div className={styles.filterContainer}>
+          <select
+            id="specialty"
+            value={selectedSpecialty}
+            onChange={(e) => handleSpecialtyChange(e.target.value)}
+            className={styles.specialtySelect}
+          >
+            {specialties.map((specialty) => (
+              <option key={specialty} value={specialty}>
+                {specialty}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <h2>Featured Doctors</h2>
-      <div className={styles.gridContainer}>
-        {filteredDoctors.map((doctor, index) => ( // Use filteredDoctors here
-          <Link key={index} href={`/${createSlug(doctor["Doctor Name"])}`} className={styles.doctorCard}>
-              {isValidUrl(doctor["Photo URL"]) ? (
-                <img
-                  src={doctor["Photo URL"]}
-                  alt={doctor["Doctor Name"]}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = '/placeholder-image.png'; // Fallback image
-                    target.alt = 'Image not available';
-                  }}
-                />
-              ) : (
-                 <img src="/placeholder-image.png" alt="Placeholder" /> // Placeholder if URL invalid
-              )}
-              <h3>{doctor["Doctor Name"]}</h3>
-              <p>{doctor.Designation}</p>
-          </Link>
-        ))}
-      </div>
+      {loading ? (
+        <Loading />
+      ) : error ? (
+        <ErrorDisplay message={error} />
+      ) : (
+        <>
+          <div className={styles.doctorsGrid}>
+            {doctors.map((doctor) => (
+              <Link
+                href={`/${encodeURIComponent(doctor["Doctor Name"])}`}
+                key={`doctor-${doctor["Doctor Name"]}`}
+                className={styles.doctorCard}
+              >
+                <div className={styles.doctorCardImage}>
+                  {isValidUrl(doctor["Photo URL"]) ? (
+                    <img
+                      src={doctor["Photo URL"]}
+                      alt={doctor["Doctor Name"]}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = '/placeholder-image.png';
+                      }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <img
+                      src="/placeholder-image.png"
+                      alt="Doctor photo not available"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+                <div className={styles.doctorCardInfo}>
+                  <h3>{doctor["Doctor Name"]}</h3>
+                  <p className={styles.specialty}>{doctor.Specialty}</p>
+                  <p className={styles.designation}>{doctor.Designation}</p>
+                  <p className={styles.workplace}>{doctor.Workplace}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={styles.pageButton}
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`${styles.pageButton} ${
+                    currentPage === pageNum ? styles.activePage : ''
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={styles.pageButton}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-// Export a default component that wraps HomePageContent in Suspense
-export default function Home() {
+export default function HomePage() {
   return (
-    <Suspense fallback={<main className={styles.pageContainer}><h1>Loading Filter...</h1></main>}>
+    <ErrorBoundary>
       <HomePageContent />
-    </Suspense>
+    </ErrorBoundary>
   );
 }

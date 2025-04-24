@@ -1,13 +1,46 @@
 'use client';
 
-import React from 'react';
+import styles from './page.module.css';
 
 export default function ContactPage() {
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Contact Us</h1>
-      <p>Email: contact@doctorfinder.com</p>
-      <p>Phone: +1-800-123-4567</p>
+    <div className={styles.contactContainer}>
+      <h1 className={styles.pageTitle}>Contact Us</h1>
+      
+      <div className={styles.content}>
+        <div className={styles.contactInfo}>
+          <div className={styles.infoCard}>
+            <div className={styles.infoLabel}>Email</div>
+            <div className={styles.infoValue}>
+              <a href="mailto:info@doctorfinder.com">info@doctorfinder.com</a>
+            </div>
+          </div>
+
+          <div className={styles.infoCard}>
+            <div className={styles.infoLabel}>Phone</div>
+            <div className={styles.infoValue}>
+              <a href="tel:+880123456789">+880 12345-6789</a>
+            </div>
+          </div>
+
+          <div className={styles.infoCard}>
+            <div className={styles.infoLabel}>Support Hours</div>
+            <div className={styles.infoValue}>
+              Sunday - Thursday<br />
+              9:00 AM - 6:00 PM
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.address}>
+          <p>
+            Doctor Finder Bangladesh<br />
+            Level 4, House 123<br />
+            Road 12, Banani<br />
+            Dhaka 1213, Bangladesh
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

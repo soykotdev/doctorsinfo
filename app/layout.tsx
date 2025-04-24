@@ -1,33 +1,29 @@
-import React from 'react';
-import type { Metadata } from "next";
-import "./globals.css";
-import Navbar from "../components/Navbar";
-import Footer from '../components/Footer';
-import { Inter } from 'next/font/google';
+'use client';
 
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: "Doctor Finder",
-  description: "Find doctors by specialty",
-  viewport: 'width=device-width, initial-scale=1',
-};
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { Suspense } from 'react';
+import Loading from '@/components/Loading';
+import './globals.css';
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="layout-container">
+      <body>
+        <ErrorBoundary>
           <Navbar />
-          <main style={{ paddingTop: '20px', paddingBottom: '20px' }}>
-            {children}
+          <main>
+            <Suspense fallback={<Loading />}>
+              {children}
+            </Suspense>
           </main>
           <Footer />
-        </div>
+        </ErrorBoundary>
       </body>
     </html>
   );

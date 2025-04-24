@@ -1,0 +1,300 @@
+.doctorInfoContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  color: #1a365d;
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  font-weight: 700;
+}
+
+.pageTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #3182ce, #63b3ed);
+  border-radius: 2px;
+}
+
+.mainContent {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.profileHeader {
+  display: flex;
+  gap: 3rem;
+  padding: 3rem;
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.imageContainer {
+  flex-shrink: 0;
+}
+
+.doctorImage {
+  width: 300px;
+  height: 300px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 5px solid #fff;
+}
+
+.doctorImage:hover {
+  transform: scale(1.02) rotate(1deg);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.doctorDetails {
+  flex: 1;
+}
+
+.doctorName {
+  font-size: 2.8rem;
+  margin-bottom: 1.5rem;
+  color: #2d3748;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.credentials {
+  margin-bottom: 2rem;
+}
+
+.specialty {
+  font-size: 1.4rem;
+  color: #3182ce;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+.designation {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.workplace {
+  font-size: 1.2rem;
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.degree {
+  background: linear-gradient(145deg, #f7fafc, #edf2f7);
+  padding: 1.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.degree:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08);
+}
+
+.degree h3 {
+  font-size: 1.3rem;
+  color: #2d3748;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+.degree p {
+  font-size: 1.1rem;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.aboutSection {
+  padding: 3rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+}
+
+.aboutSection h3 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.aboutSection p {
+  font-size: 1.1rem;
+  color: #4a5568;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+/* Similar Doctors Section */
+.similarDoctors {
+  padding: 3rem;
+  background: linear-gradient(145deg, #f8fafc, #f0f5fa);
+}
+
+.similarDoctors h3 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.similarDoctors h3::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3182ce, #63b3ed);
+  border-radius: 2px;
+}
+
+.similarDoctorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.similarDoctorCard {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  isolation: isolate;
+}
+
+.similarDoctorCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, rgba(49, 130, 206, 0.1), rgba(99, 179, 237, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.similarDoctorCard:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.similarDoctorCard:hover::before {
+  opacity: 1;
+}
+
+.cardImage {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.similarDoctorCard:hover .cardImage img {
+  transform: scale(1.1);
+}
+
+.cardInfo {
+  padding: 1.5rem;
+  background: white;
+}
+
+.cardInfo h4 {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.cardInfo p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.workplaceInfo {
+  margin-top: 0.5rem;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .doctorInfoContainer {
+    padding: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    padding: 2rem;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .imageContainer {
+    margin: 0 auto;
+  }
+
+  .doctorImage {
+    width: 250px;
+    height: 250px;
+  }
+
+  .doctorName {
+    font-size: 2.2rem;
+  }
+
+  .specialty {
+    font-size: 1.2rem;
+  }
+
+  .aboutSection,
+  .similarDoctors {
+    padding: 2rem;
+  }
+
+  .similarDoctorsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .cardImage {
+    height: 180px;
+  }
+}
