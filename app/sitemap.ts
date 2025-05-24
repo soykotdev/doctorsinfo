@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { clientPromise } from '@/lib/mongodb';
+import { NextResponse } from 'next/server';
 
 // Function to escape XML special characters
 function escapeXml(unsafe: string): string {
@@ -122,10 +123,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  return [
+  const urls = [
     ...staticPages,
     ...doctorUrls,
     ...specialtyPages,
     ...hospitalPages
   ];
+
+  // Return as an array of objects for Next.js MetadataRoute.Sitemap
+  return urls;
 }

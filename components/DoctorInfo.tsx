@@ -86,14 +86,21 @@ const DoctorInfo: React.FC<DoctorInfoProps> = ({ doctor }) => {
         </section>
 
         <section className={styles.chamberSection}>
-          <h3 className={styles.sectionTitle}>Practice Information</h3>
+          <h3 className={styles.sectionTitle}>Chamber Information of {doctor["Doctor Name"]}</h3>
           <div className={styles.chamberCard}>
             <div className={styles.chamberInfo}>
               <div className={styles.infoGroup}>
                 <FaHospital className={styles.infoIcon} />
                 <div>
                   <h4>Hospital</h4>
-                  <p>{doctor["Hospital Name"]}</p>
+                  <p>
+                    <a
+                      href={`/hospitals/${encodeURIComponent(doctor.Location)}/${encodeURIComponent(doctor["Hospital Name"].replace(/\s+/g, '-').toLowerCase())}`}
+                      style={{ color: '#2563eb', textDecoration: 'underline' }}
+                    >
+                      {doctor["Hospital Name"]}
+                    </a>
+                  </p>
                 </div>
               </div>
 

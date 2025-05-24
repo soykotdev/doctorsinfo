@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { clientPromise } from '@/lib/mongodb';
 import styles from './SpecialityPage.module.css';
 import { Metadata } from 'next';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Props {
   params: {
@@ -78,6 +79,13 @@ export default async function SpecialityPage({ params }: Props) {
 
   return (
     <div className={styles.container}>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: location, href: `/hospitals/${encodeURIComponent(location)}` },
+          { label: formattedSpeciality }
+        ]}
+      />
       <div className={styles.pageHeader}>
         <h1 className={styles.sectionTitle}>
           Best {formattedSpeciality} Doctors in {location}
@@ -158,7 +166,7 @@ export default async function SpecialityPage({ params }: Props) {
             <p className={styles.faqAnswer}>
               The list above features top doctors verified for their qualifications and experience. 
               Each doctor is ranked based on their expertise, patient feedback, and years of experience 
-              in {formattedSpeciality.toLowerCase()} care.
+              in {formattedSpeciality.toLowerCase()} care. See more <Link href={`/specialists/${encodeURIComponent(location)}`}>specialties in {location}</Link> or <Link href={`/hospitals/${encodeURIComponent(location)}`}>hospitals in {location}</Link>.
             </p>
           </div>
           <div className={styles.faqCard}>
@@ -167,7 +175,7 @@ export default async function SpecialityPage({ params }: Props) {
             </h3>
             <p className={styles.faqAnswer}>
               You can directly call the appointment number listed on each doctor's profile. 
-              Additionally, you can view their full profile for more contact options and chamber details.
+              Additionally, you can view their <Link href={`/${doctors[0]?.Slug}`}>full profile</Link> for more contact options and chamber details.
             </p>
           </div>
           <div className={styles.faqCard}>
@@ -177,7 +185,7 @@ export default async function SpecialityPage({ params }: Props) {
             <p className={styles.faqAnswer}>
               Yes, many {formattedSpeciality.toLowerCase()} doctors have weekend hours. Check individual 
               profiles for specific visiting hours and availability. It's recommended to call ahead and 
-              confirm the timing.
+              confirm the timing. You can also <Link href={`/hospitals/${encodeURIComponent(location)}`}>browse all hospitals in {location}</Link>.
             </p>
           </div>
         </div>

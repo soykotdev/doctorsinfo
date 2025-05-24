@@ -169,6 +169,23 @@ export default function HomePageContent({
     }
   };
 
+  // Use the full doctor list for navigation filtering, not just paginated/filtered doctors
+  // This ensures only valid, non-empty links are shown for specialties, hospitals, and locations
+  const allDoctors = initialDoctors; // Should be the full list, not paginated
+
+  // For specialties, show only those with at least one doctor in the selected location
+  const specialtiesWithDoctors = specialties.filter(specialty =>
+    allDoctors.some(doc => doc.Speciality === specialty && doc.Location === selectedLocation)
+  );
+  // For hospitals, show only those with at least one doctor in the selected location
+  const hospitalsWithDoctors = hospitals.filter(hospital =>
+    allDoctors.some(doc => doc["Hospital Name"] === hospital && doc.Location === selectedLocation)
+  );
+  // For locations, show only those with at least one doctor
+  const locationsWithDoctors = locations.filter(location =>
+    allDoctors.some(doc => doc.Location === location)
+  );
+
   return (
     <>
       <Head>
@@ -217,6 +234,46 @@ export default function HomePageContent({
                   <span className={styles.specialtyCount}>{count}</span>
                 </Link>
               ))}
+          </div>
+        </section>
+        {/* Popular Hospitals Section (show hospitals with at least one doctor, any location) */}
+        <section className={styles.quickSpecialtyNavSection}>
+          <h2 className={styles.quickSpecialtyNavTitle}>Popular Hospitals</h2>
+          <div className={styles.quickSpecialtyNavGrid}>
+            {hospitals
+              .filter(hospital => allDoctors.some(doc => doc["Hospital Name"] === hospital))
+              .slice(0, 12)
+              .map(hospital => {
+                // Find a doctor for this hospital to get a valid location
+                const doctor = allDoctors.find(doc => doc["Hospital Name"] === hospital);
+                if (!doctor) return null;
+                const location = doctor.Location;
+                const hospitalSlug = hospital.replace(/\s+/g, '-').toLowerCase();
+                return (
+                  <Link
+                    key={hospital}
+                    href={`/hospitals/${encodeURIComponent(location)}/${encodeURIComponent(hospitalSlug)}`}
+                    className={styles.quickSpecialtyNavLink}
+                  >
+                    {hospital}
+                  </Link>
+                );
+              })}
+          </div>
+        </section>
+        {/* Popular Locations Section */}
+        <section className={styles.quickSpecialtyNavSection}>
+          <h2 className={styles.quickSpecialtyNavTitle}>Popular Locations</h2>
+          <div className={styles.quickSpecialtyNavGrid}>
+            {locationsWithDoctors.slice(0, 12).map(location => (
+              <Link
+                key={location}
+                href={`/hospitals/${encodeURIComponent(location)}`}
+                className={styles.quickSpecialtyNavLink}
+              >
+                {location}
+              </Link>
+            ))}
           </div>
         </section>
         <section aria-label="Featured Doctors" className={styles.doctorsSection}>

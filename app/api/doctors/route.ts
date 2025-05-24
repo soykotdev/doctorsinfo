@@ -82,6 +82,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ pairs: flatPairs }, { headers: corsHeaders });
     }
 
+    if (searchParams.get('uniqueLocationHospitalPairs')) {
+      // For each (location, Hospital Name) pair, count doctors and return only pairs with count > 0
+      const pairs = await db.collection('doctor_info').aggregate([
+        { $match: { Location: { $ne: null }, "Hospital Name": { $ne: null } } },
+        { $group: { _id: { location: "$Location", hospital: "$Hospital Name" }, count: { $sum: 1 } } },
+        { $match: { count: { $gt: 0 } } },
+        { $project: { location: "$_id.location", hospital: "$_id.hospital", count: 1, _id: 0 } }
+      ]).toArray();
+      return NextResponse.json({ pairs }, { headers: corsHeaders });
+    }
+
     // Build query
     const query: any = {};
     if (name) {

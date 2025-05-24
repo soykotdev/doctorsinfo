@@ -3,9 +3,45 @@
 import styles from './Footer.module.css';
 import Link from 'next/link';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+
+interface LocationSpecialtyPair {
+  location: string;
+  speciality: string;
+}
+interface LocationHospitalPair {
+  location: string;
+  hospital: string;
+}
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [locations, setLocations] = useState<string[]>([]);
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [hospitals, setHospitals] = useState<string[]>([]);
+  const [specialtyPairs, setSpecialtyPairs] = useState<LocationSpecialtyPair[]>([]);
+  const [hospitalPairs, setHospitalPairs] = useState<LocationHospitalPair[]>([]);
+
+  useEffect(() => {
+    fetch('/api/doctors?locations=true')
+      .then(res => res.json())
+      .then(data => setLocations((data.locations || []).filter(Boolean))
+      );
+    fetch('/api/doctors?specialties=true')
+      .then(res => res.json())
+      .then(data => setSpecialties((data.specialties || []).filter(Boolean))
+      );
+    fetch('/api/doctors?hospitals=true')
+      .then(res => res.json())
+      .then(data => setHospitals((data.hospitals || []).filter(Boolean))
+      );
+    fetch('/api/doctors?uniqueLocationSpecialityPairs=true')
+      .then(res => res.json())
+      .then(data => setSpecialtyPairs((data.pairs || []).filter((p: any) => p.location && p.speciality)));
+    fetch('/api/doctors?uniqueLocationHospitalPairs=true')
+      .then(res => res.json())
+      .then(data => setHospitalPairs((data.pairs || []).filter((p: any) => p.location && p.hospital)));
+  }, []);
 
   return (
     <footer className={styles.footer}>
@@ -64,6 +100,40 @@ export default function Footer() {
             />
             <button type="submit" className={styles.newsletterButton}>Subscribe</button>
           </form>
+        </div>
+
+        <div className={styles.footerSection}>
+          <h4 className={styles.footerHeading}>Popular Locations</h4>
+          <ul className={styles.footerLinks}>
+            {locations
+              .filter(location => location && location.length > 0)
+              .slice(0, 10)
+              .map(location => (
+                <li key={location}>
+                  <Link href={`/hospitals/${encodeURIComponent(location)}`}>{location}</Link>
+                </li>
+              ))}
+          </ul>
+        </div>
+        <div className={styles.footerSection}>
+          <h4 className={styles.footerHeading}>Popular Specialties</h4>
+          <ul className={styles.footerLinks}>
+            {specialtyPairs.slice(0, 10).map(pair => (
+              <li key={pair.location + pair.speciality}>
+                <Link href={`/specialists/${encodeURIComponent(pair.location)}/${pair.speciality.toLowerCase().replace(/\s+/g, '-')}`}>{pair.speciality} ({pair.location})</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={styles.footerSection}>
+          <h4 className={styles.footerHeading}>Popular Hospitals</h4>
+          <ul className={styles.footerLinks}>
+            {hospitalPairs.slice(0, 10).map(pair => (
+              <li key={pair.location + pair.hospital}>
+                <Link href={`/hospitals/${encodeURIComponent(pair.location)}/${pair.hospital.replace(/\s+/g, '-').toLowerCase()}`}>{pair.hospital} ({pair.location})</Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       

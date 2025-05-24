@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import DoctorPageClient from './DoctorPageClient';
 import { clientPromise } from '@/lib/mongodb';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Props {
   params: { slug: string }
@@ -111,7 +112,20 @@ export default async function DoctorPage({ params }: Props) {
       "Appointment Number": doctor["Appointment Number"] ?? "",
       Slug: doctor["Slug"] ?? ""
     };
-    return <DoctorPageClient doctor={doctorData} />;
+    return (
+      <>
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: doctorData.Location, href: `/hospitals/${encodeURIComponent(doctorData.Location)}` },
+            { label: doctorData["Hospital Name"], href: `/hospitals/${encodeURIComponent(doctorData.Location)}/${doctorData["Hospital Name"].replace(/\s+/g, '-').toLowerCase()}` },
+            { label: doctorData.Speciality, href: `/specialists/${encodeURIComponent(doctorData.Location)}/${doctorData.Speciality.toLowerCase().replace(/\s+/g, '-')}` },
+            { label: doctorData["Doctor Name"] }
+          ]}
+        />
+        <DoctorPageClient doctor={doctorData} />
+      </>
+    );
   } catch (error) {
     console.error('Error fetching doctor:', error);
     return (

@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { clientPromise } from '@/lib/mongodb';
 import Link from 'next/link';
 import SchemaOrg from '@/components/SchemaOrg';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import styles from './HospitalPage.module.css';
 import { slugify } from '@/lib/utils';
 
@@ -79,6 +80,13 @@ export default async function HospitalDoctorListPage({ params }: Props) {
 
   return (
     <div className={styles.hospitalDoctorListContainer}>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: location, href: `/hospitals/${encodeURIComponent(location)}` },
+          { label: hospitalName }
+        ]}
+      />
       <h1 className={styles.hospitalDoctorListTitle}>
         {hospitalName} doctor list, {location}
       </h1>
@@ -107,15 +115,15 @@ export default async function HospitalDoctorListPage({ params }: Props) {
       <div className={styles.faqSectionCards}>
         <div className={styles.faqCard}>
           <div className={styles.faqQ}><span className={styles.faqIcon}>❓</span> How to book an appointment at {hospitalName}?</div>
-          <div className={styles.faqA}>Call the appointment number listed for your doctor or use the contact form on their profile page.</div>
+          <div className={styles.faqA}>Call the appointment number listed for your doctor or use the contact form on their <Link href={`/${doctors[0]?.Slug}`}>profile page</Link>. You can also <Link href={`/hospitals/${encodeURIComponent(location)}`}>browse all hospitals in {location}</Link>.</div>
         </div>
         <div className={styles.faqCard}>
           <div className={styles.faqQ}><span className={styles.faqIcon}>⏰</span> What are the visiting hours?</div>
-          <div className={styles.faqA}>Check the visiting hours listed for each doctor above.</div>
+          <div className={styles.faqA}>Check the visiting hours listed for each doctor above. For more details, see the <Link href={`/${doctors[0]?.Slug}`}>doctor's profile</Link>.</div>
         </div>
         <div className={styles.faqCard}>
           <div className={styles.faqQ}><span className={styles.faqIcon}>🏥</span> Does {hospitalName} offer [Specialty]?</div>
-          <div className={styles.faqA}>See the specialties listed for each doctor. For more, contact the hospital directly.</div>
+          <div className={styles.faqA}>See the specialties listed for each doctor. For more, <Link href={`/specialists/${encodeURIComponent(location)}`}>browse all specialties in {location}</Link> or contact the hospital directly.</div>
         </div>
       </div>
       {relatedHospitals.length > 0 && (
