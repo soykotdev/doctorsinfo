@@ -1,51 +1,80 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import styles from './ErrorDisplay.module.css';
+'use client';
+
+import React from 'react';
+import ErrorDisplay from './ErrorDisplay';
 
 interface Props {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: string;
 }
 
-export default class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: '',
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error);
-    console.error('Error info:', errorInfo);
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
-  public render() {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.setState({
+      error,
+      errorInfo: errorInfo.componentStack || '',
+    });
+
+    // Log the error to your error tracking service
+    this.logError(error, errorInfo);
+  }
+
+  logError = (error: Error, errorInfo: React.ErrorInfo) => {
+    // In production, send to your error tracking service
+    if (process.env.NODE_ENV === 'production') {
+      const errorData = {
+        error: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        },
+        errorInfo: errorInfo.componentStack,
+        url: window.location.href,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Send to your error tracking endpoint
+      fetch('https://topdoctorlist.com/api/error-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(errorData),
+      }).catch(console.error);
+    } else {
+      console.error('Error:', error);
+      console.error('Error Info:', errorInfo);
+    }
+  };
+
+  render() {
     if (this.state.hasError) {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
       return (
-        <div className={styles.errorContainer}>
-          <div className={styles.errorContent}>
-            <h2>Something went wrong</h2>
-            <p>{this.state.error?.message || 'An unexpected error occurred'}</p>
-            <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                window.location.reload();
-              }}
-              className={styles.retryButton}
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
+        <ErrorDisplay 
+          error={this.state.error}
+          errorInfo={isDevelopment ? this.state.errorInfo : undefined}
+          resetError={() => this.setState({ hasError: false, error: null, errorInfo: '' })}
+        />
       );
     }
 

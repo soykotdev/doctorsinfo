@@ -1,114 +1,178 @@
 .policyContainer {
-  padding: 40px 20px;
-  max-width: 900px;
+  max-width: 1280px;
   margin: 0 auto;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  padding: 4rem 1rem;
 }
 
-.pageTitle {
-  font-size: 2.5em;
-  color: #2d3748;
-  margin-bottom: 1.5em;
+.header {
   text-align: center;
-  background: linear-gradient(45deg, #1a365d, #2b6cb0);
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+.lastUpdated {
+  color: var(--gray-500);
+  font-size: 1rem;
+}
+
 .content {
-  display: flex;
-  flex-direction: column;
-  gap: 2em;
+  background: var(--white);
+  border-radius: 1rem;
+  padding: 3rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .section {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  margin-bottom: 3rem;
 }
 
-.section:hover {
-  transform: translateY(-2px);
+.section:last-child {
+  margin-bottom: 0;
 }
 
 .sectionTitle {
-  font-size: 1.5em;
-  color: #2d3748;
-  margin-bottom: 1em;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--gray-100);
 }
 
 .paragraph {
-  font-size: 1.1em;
+  color: var(--gray-700);
   line-height: 1.8;
-  color: #4a5568;
-  margin: 0 0 1em 0;
-}
-
-.paragraph:last-child {
-  margin-bottom: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.125rem;
 }
 
 .list {
   list-style: none;
   padding: 0;
-  margin: 0 0 1em 0;
+  margin: 0 0 1.5rem 0;
 }
 
 .listItem {
   position: relative;
-  padding-left: 1.5em;
-  margin-bottom: 0.8em;
-  color: #4a5568;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--gray-700);
   line-height: 1.6;
 }
 
 .listItem::before {
-  content: "•";
+  content: "";
   position: absolute;
   left: 0;
-  color: #2b6cb0;
-  font-weight: bold;
+  top: 0.75rem;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
 }
 
-.highlight {
-  color: #2b6cb0;
+.emphasis {
+  color: var(--primary);
   font-weight: 500;
 }
 
-.email {
-  color: #2b6cb0;
-  text-decoration: none;
-  transition: color 0.2s ease;
+.callout {
+  background: var(--gray-50);
+  border-left: 4px solid var(--primary);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 2rem 0;
 }
 
-.email:hover {
-  color: #1a365d;
-  text-decoration: underline;
+.calloutTitle {
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.calloutText {
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
+.contactSection {
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  color: var(--white);
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-top: 3rem;
+}
+
+.contactTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.contactText {
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--white);
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.contactLink:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
   .policyContainer {
-    padding: 20px;
+    padding: 2rem 1rem;
   }
 
-  .pageTitle {
-    font-size: 2em;
-    margin-bottom: 1em;
+  .title {
+    font-size: 2.5rem;
   }
 
-  .section {
-    padding: 20px;
+  .content {
+    padding: 2rem;
   }
 
   .sectionTitle {
-    font-size: 1.3em;
+    font-size: 1.5rem;
   }
 
   .paragraph {
-    font-size: 1em;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .contactSection {
+    padding: 1.5rem;
   }
 }

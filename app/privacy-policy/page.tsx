@@ -1,67 +1,52 @@
-'use client';
+import React from 'react';
+import styles from '../privacy-policy/page.module.css';
 
-import styles from './page.module.css';
-
-export default function PrivacyPolicyPage() {
+export default function PrivacyPolicy() {
   return (
-    <div className={styles.policyContainer}>
-      <h1 className={styles.pageTitle}>Privacy Policy</h1>
-      
+    <div className={styles.container}>
+      <h1 className={styles.title}>Privacy Policy</h1>
       <div className={styles.content}>
+        <p className={styles.lastUpdated}>Last Updated: April 28, 2025</p>
+
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Introduction</h2>
-          <p className={styles.paragraph}>
-            Welcome to Doctor Finder's Privacy Policy. We respect your privacy and are committed to protecting your personal data. This policy outlines how we collect, use, and safeguard your information when you use our service.
+          <h2>Introduction</h2>
+          <p>
+            Welcome to TopDoctorList (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and protect your information when you use our website (https://topdoctorlist.com) and services.
           </p>
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Information We Collect</h2>
-          <ul className={styles.list}>
-            <li className={styles.listItem}>Basic contact information (name, email, phone number)</li>
-            <li className={styles.listItem}>Search preferences and history</li>
-            <li className={styles.listItem}>Device and browser information</li>
-            <li className={styles.listItem}>Location data (with your consent)</li>
+          <h2>Information We Collect</h2>
+          <p>When you use TopDoctorList, we may collect:</p>
+          <ul>
+            <li>Name and contact information</li>
+            <li>Appointment booking details</li>
+            <li>Medical preferences and history</li>
+            <li>Usage data and cookies</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>How We Use Your Information</h2>
-          <ul className={styles.list}>
-            <li className={styles.listItem}>To provide and improve our doctor finding service</li>
-            <li className={styles.listItem}>To personalize your search experience</li>
-            <li className={styles.listItem}>To communicate important updates and information</li>
-            <li className={styles.listItem}>To ensure the security of our platform</li>
+          <h2>How We Use Your Information</h2>
+          <p>We use your information to:</p>
+          <ul>
+            <li>Facilitate doctor appointments</li>
+            <li>Improve our services</li>
+            <li>Send relevant notifications</li>
+            <li>Ensure platform security</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Data Protection</h2>
-          <p className={styles.paragraph}>
-            We implement robust security measures to protect your data from unauthorized access, alteration, or disclosure. Our security practices include encryption, secure data storage, and regular security audits.
-          </p>
-        </section>
-
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Your Rights</h2>
-          <p className={styles.paragraph}>
-            You have the right to:
-          </p>
-          <ul className={styles.list}>
-            <li className={styles.listItem}>Access your personal data</li>
-            <li className={styles.listItem}>Request correction of your data</li>
-            <li className={styles.listItem}>Request deletion of your data</li>
-            <li className={styles.listItem}>Object to data processing</li>
-          </ul>
-        </section>
-
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Contact Us</h2>
-          <p className={styles.paragraph}>
-            If you have any questions about this Privacy Policy, please contact us at{' '}
-            <a href="mailto:privacy@doctorfinder.com" className={styles.email}>
-              privacy@doctorfinder.com
-            </a>
+          <h2>Contact Us</h2>
+          <p>
+            If you have questions about this Privacy Policy, please contact us at:{' '}
+            <a href="mailto:privacy@topdoctorlist.com">privacy@topdoctorlist.com</a>
+            <br />
+            TopDoctorList<br />
+            House 123, Road 12<br />
+            Banani, Dhaka 1213<br />
+            Bangladesh
           </p>
         </section>
       </div>

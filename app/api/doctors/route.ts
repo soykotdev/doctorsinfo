@@ -1,190 +1,152 @@
-import { NextResponse } from 'next/server';
-import { MongoClient } from 'mongodb';
+import { NextRequest, NextResponse } from 'next/server';
+import { clientPromise } from '@/lib/mongodb';
 
-let cachedClient: MongoClient | null = null;
-let cachedDb: any = null;
-let connectionPromise: Promise<{ client: MongoClient; db: any }> | null = null;
+export const dynamic = 'force-dynamic';
 
-async function connectToDatabase() {
-  // If we have a connection promise in progress, wait for it
-  if (connectionPromise) {
-    return connectionPromise;
-  }
+// CORS and security headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
+    ? 'https://topdoctorlist.com' 
+    : 'http://localhost:3000',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30'
+};
 
-  // If we have a cached connection, verify it's still alive
-  if (cachedClient && cachedDb) {
-    try {
-      // Ping the database to check connection
-      await cachedDb.command({ ping: 1 });
-      return { client: cachedClient, db: cachedDb };
-    } catch (error) {
-      console.warn('Cached MongoDB connection is no longer valid, creating new connection');
-      cachedClient = null;
-      cachedDb = null;
-    }
-  }
-
-  // Create new connection
-  connectionPromise = (async () => {
-    try {
-      const uri = process.env.MONGODB_URI;
-      if (!uri) {
-        throw new Error('MongoDB URI is not configured');
-      }
-      
-      const client = new MongoClient(uri, {
-        maxPoolSize: 10,
-        minPoolSize: 5,
-        maxIdleTimeMS: 60000,
-        serverSelectionTimeoutMS: 5000, // 5 second timeout for server selection
-        connectTimeoutMS: 10000, // 10 second timeout for initial connection
-        socketTimeoutMS: 15000, // 15 second timeout for operations
-      });
-
-      await client.connect();
-      const db = client.db("mydata");
-      
-      // Test the connection
-      await db.command({ ping: 1 });
-      
-      // Cache the connection
-      cachedClient = client;
-      cachedDb = db;
-      
-      return { client, db };
-    } catch (error) {
-      console.error('MongoDB connection error:', error);
-      
-      // Specific error handling for different MongoDB connection issues
-      if (error instanceof Error) {
-        if (error.message.includes('ENOTFOUND') || error.message.includes('ETIMEDOUT')) {
-          throw new Error('Database server is unreachable. Please try again later.');
-        } else if (error.message.includes('Authentication failed')) {
-          throw new Error('Database authentication failed. Please contact support.');
-        } else if (error.message.includes('topology')) {
-          throw new Error('Database connection was interrupted. Please try again.');
-        }
-      }
-      
-      throw new Error('Failed to connect to database. Please try again later.');
-    } finally {
-      connectionPromise = null;
-    }
-  })();
-
-  return connectionPromise;
-}
-
-interface Doctor {
-  "Doctor Name": string;
-  "Photo URL": string;
-  Degree: string;
-  Specialty: string;
-  Designation: string;
-  Workplace: string;
-  About: string;
-}
-
-interface PaginatedResponse {
-  doctors: Doctor[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const name = searchParams.get('name');
-    const specialty = searchParams.get('specialty');
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '10')));
-    const skip = (page - 1) * pageSize;
+    const searchParams = req.nextUrl.searchParams;
+    const client = await clientPromise;
+    const db = client.db(process.env.MONGODB_DB_NAME);
 
-    const { db } = await connectToDatabase();
-    const collection = db.collection("doctor_info");
-    
-    let query: any = {};
-    
+    // Parse query parameters
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '24');
+    const name = searchParams.get('name');
+    const speciality = searchParams.get('speciality');
+    const location = searchParams.get('location');
+    const hospital = searchParams.get('hospital');
+    const sortBy = searchParams.get('sortBy') || 'name';
+
+    // Handle metadata-only requests
+    if (searchParams.get('specialties')) {
+      const location = searchParams.get('location');
+      let specialties;
+      if (location) {
+        specialties = await db.collection('doctor_info')
+          .distinct('Speciality', { Location: location });
+      } else {
+        specialties = await db.collection('doctor_info')
+          .distinct('Speciality');
+      }
+      return NextResponse.json({ specialties }, {
+        headers: corsHeaders
+      });
+    }
+
+    if (searchParams.get('locations')) {
+      const locations = await db.collection('doctor_info')
+        .distinct('Location');
+      return NextResponse.json({ locations }, {
+        headers: corsHeaders
+      });
+    }
+
+    if (searchParams.get('hospitals')) {
+      const location = searchParams.get('location');
+      const query = location ? { Location: location } : {};
+      const hospitals = await db.collection('doctor_info')
+        .distinct('Hospital Name', query);
+      return NextResponse.json({ hospitals }, {
+        headers: corsHeaders
+      });
+    }
+
+    if (searchParams.get('uniqueLocationSpecialityPairs')) {
+      // For each (location, Speciality) pair, count doctors and return only pairs with count > 0
+      const pairs = await db.collection('doctor_info').aggregate([
+        { $match: { Location: { $ne: null }, Speciality: { $ne: null } } },
+        { $group: { _id: { location: "$Location", speciality: "$Speciality" }, count: { $sum: 1 } } },
+        { $match: { count: { $gt: 0 } } },
+        { $project: { location: "$_id.location", speciality: "$_id.speciality", slugifiedSpeciality: "", count: 1, _id: 0 } }
+      ]).toArray();
+      // Add slugifiedSpeciality for each pair
+      const { slugify } = await import('@/lib/utils');
+      const flatPairs = pairs.map(pair => ({
+        location: pair.location,
+        speciality: pair.speciality,
+        slugifiedSpeciality: slugify(pair.speciality),
+        count: pair.count
+      }));
+      return NextResponse.json({ pairs: flatPairs }, { headers: corsHeaders });
+    }
+
+    // Build query
+    const query: any = {};
     if (name) {
-      const nameParts = name.split(' ').filter(part => part.length > 0);
-      const nameRegex = nameParts.map(part => `(?=.*${part})`).join('');
-      query["Doctor Name"] = { 
-        $regex: nameRegex,
-        $options: 'i'
-      };
+      query['Doctor Name'] = { $regex: name, $options: 'i' };
     }
-    
-    if (specialty && specialty.toLowerCase() !== 'all') {
-      query.Specialty = {
-        $regex: specialty,
-        $options: 'i'
-      };
+    if (speciality) {
+      query['Speciality'] = { $regex: speciality, $options: 'i' };
     }
-    
-    // Get total count for pagination
-    const total = await collection.countDocuments(query);
-    
-    // Fetch randomized paginated results using aggregation pipeline
-    const doctors = await collection
-      .aggregate([
-        { $match: query },
-        { $sample: { size: total } }, // Randomize all matching documents
-        { $skip: skip },
-        { $limit: pageSize }
-      ])
-      .toArray() as Doctor[];
-    
-    if (!doctors || doctors.length === 0) {
-      return NextResponse.json(
-        { error: 'No doctors found matching your criteria.' },
-        { status: 404 }
-      );
+    if (location) {
+      query['Location'] = { $regex: location, $options: 'i' };
     }
-    
-    const response: PaginatedResponse = {
+    if (hospital) {
+      query['Hospital Name'] = { $regex: hospital, $options: 'i' };
+    }
+
+    // Build sort
+    const sort: any = {};
+    switch (sortBy) {
+      case 'rating':
+        sort['Rating'] = -1;
+        break;
+      case 'experience':
+        sort['Experience Years'] = -1;
+        break;
+      default:
+        sort['Doctor Name'] = 1;
+    }
+
+    // Execute query
+    const skip = (page - 1) * pageSize;
+    const [doctors, totalCount] = await Promise.all([
+      db.collection('doctor_info')
+        .find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize)
+        .project({ Slug: 1, "Doctor Name": 1, "Photo URL": 1, Degree: 1, Speciality: 1, Designation: 1, Workplace: 1, About: 1, "Hospital Name": 1, Address: 1, Location: 1, "Visiting Hours": 1, "Appointment Number": 1 })
+        .toArray(),
+      db.collection('doctor_info')
+        .countDocuments(query)
+    ]);
+
+    return NextResponse.json({
       doctors,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize)
-    };
-    
-    return NextResponse.json(response, {
+      totalDoctors: totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: page
+    }, {
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'X-Total-Count': total.toString(),
-        'X-Page-Count': Math.ceil(total / pageSize).toString(),
-        'X-Current-Page': page.toString()
+        ...corsHeaders,
+        'Content-Type': 'application/json',
       }
     });
-    
+
   } catch (error) {
-    console.error('Error fetching data from MongoDB:', error);
-    
-    let statusCode = 500;
-    let errorMessage = 'An unexpected error occurred while fetching doctor information.';
-
-    if (error instanceof Error) {
-      if (error.message.includes('ENOTFOUND') || 
-          error.message.includes('ETIMEDOUT') ||
-          error.message.includes('topology')) {
-        statusCode = 503;
-        errorMessage = 'The database service is temporarily unavailable. Please try again later.';
-      } else if (error.message.includes('Authentication failed')) {
-        statusCode = 500;
-        errorMessage = 'Internal server error. Our team has been notified.';
-      } else {
-        errorMessage = `Failed to fetch doctors: ${error.message}`;
-      }
-    }
-
+    console.error('API Error:', error);
     return NextResponse.json(
-      { error: errorMessage },
-      { status: statusCode }
+      { error: 'Internal Server Error' },
+      { status: 500 }
     );
   }
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: corsHeaders
+  });
 }

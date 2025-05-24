@@ -1,30 +1,60 @@
 import React from 'react';
+import Link from 'next/link';
 import styles from './ErrorDisplay.module.css';
 
-interface ErrorDisplayProps {
-  message: string;
-  onRetry?: () => void;
+interface Props {
+  error: Error | null;
+  errorInfo?: string;
+  resetError: () => void;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message, onRetry }) => {
+export default function ErrorDisplay({ error, errorInfo, resetError }: Props) {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   return (
     <div className={styles.errorContainer}>
       <div className={styles.errorContent}>
-        <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12" y2="16" />
-        </svg>
-        <h2>Error Loading Data</h2>
-        <p>{message}</p>
-        {onRetry && (
-          <button onClick={onRetry} className={styles.retryButton}>
+        <h1 className={styles.errorTitle}>
+          {isProduction ? 'Something went wrong' : error?.message || 'Error'}
+        </h1>
+        
+        <p className={styles.errorMessage}>
+          {isProduction ? (
+            'We apologize for the inconvenience. Our team has been notified and is working to fix this issue.'
+          ) : (
+            error?.message
+          )}
+        </p>
+
+        {errorInfo && !isProduction && (
+          <pre className={styles.errorStack}>
+            <code>{errorInfo}</code>
+          </pre>
+        )}
+
+        <div className={styles.actionButtons}>
+          <button
+            onClick={resetError}
+            className={styles.retryButton}
+          >
             Try Again
           </button>
-        )}
+
+          <Link href="/" className={styles.homeButton}>
+            Return to Homepage
+          </Link>
+        </div>
+
+        <div className={styles.supportInfo}>
+          <p>Need help? Contact our support team:</p>
+          <a 
+            href="mailto:support@topdoctorlist.com"
+            className={styles.supportLink}
+          >
+            support@topdoctorlist.com
+          </a>
+        </div>
       </div>
     </div>
   );
-};
-
-export default ErrorDisplay;
+}

@@ -1,90 +1,190 @@
 .contactContainer {
-  padding: 40px 20px;
-  max-width: 800px;
+  max-width: 1280px;
   margin: 0 auto;
+  padding: 4rem 1rem;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
-.pageTitle {
-  font-size: 2.5em;
-  color: #2d3748;
-  margin-bottom: 1.5em;
-  text-align: center;
-  background: linear-gradient(45deg, #1a365d, #2b6cb0);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 2em;
-  align-items: center;
+.contactGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 4rem;
+  align-items: start;
 }
 
 .contactInfo {
-  display: grid;
-  gap: 1.5em;
-  width: 100%;
-  max-width: 500px;
+  background: linear-gradient(to bottom right, var(--primary), var(--secondary));
+  padding: 3rem 2rem;
+  border-radius: 1rem;
+  color: var(--white);
 }
 
-.infoCard {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  text-align: center;
-  transition: transform 0.2s ease;
+.contactTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
-.infoCard:hover {
-  transform: translateY(-3px);
+.contactDescription {
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  line-height: 1.8;
 }
 
-.infoLabel {
-  font-size: 1.1em;
-  color: #2b6cb0;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.infoValue {
-  font-size: 1.2em;
-  color: #4a5568;
+.infoList {
+  list-style: none;
+  padding: 0;
   margin: 0;
 }
 
-.infoValue a {
-  color: #2b6cb0;
-  text-decoration: none;
-  transition: color 0.2s ease;
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(4px);
 }
 
-.infoValue a:hover {
-  color: #1a365d;
-  text-decoration: underline;
+.infoIcon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
-.address {
-  margin-top: 2em;
-  text-align: center;
-  color: #4a5568;
-  line-height: 1.6;
+.infoText {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.formContainer {
+  background: var(--white);
+  padding: 3rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.formTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: var(--gray-900);
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 0.75rem;
+  background-color: var(--white);
+  color: var(--gray-800);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.successMessage {
+  background: var(--success);
+  color: var(--white);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .contactGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }
 
 @media (max-width: 768px) {
   .contactContainer {
-    padding: 20px;
+    padding: 2rem 1rem;
   }
 
-  .pageTitle {
-    font-size: 2em;
-    margin-bottom: 1em;
+  .formContainer {
+    padding: 2rem;
   }
 
-  .infoCard {
-    padding: 15px;
+  .contactTitle {
+    font-size: 2rem;
+  }
+
+  .formTitle {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .contactInfo {
+    padding: 2rem 1.5rem;
+  }
+
+  .formContainer {
+    padding: 1.5rem;
   }
 }

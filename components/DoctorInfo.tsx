@@ -1,19 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import Image from 'next/image';
+import { FaMapMarkerAlt, FaClock, FaPhoneAlt, FaHospital, FaGraduationCap } from 'react-icons/fa';
+import PlaceholderImage from './PlaceholderImage';
 import styles from './DoctorInfo.module.css';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Loading from './Loading';
 
 interface Doctor {
   "Doctor Name": string;
   "Photo URL": string;
   Degree: string;
-  Specialty: string;
+  Speciality: string;
   Designation: string;
   Workplace: string;
   About: string;
+  "Hospital Name": string;
+  Address: string;
+  Location: string;
+  "Visiting Hours": string;
+  "Appointment Number": string;
 }
 
 interface DoctorInfoProps {
@@ -21,194 +26,110 @@ interface DoctorInfoProps {
 }
 
 const DoctorInfo: React.FC<DoctorInfoProps> = ({ doctor }) => {
-  const router = useRouter();
-  const [similarDoctors, setSimilarDoctors] = useState<Doctor[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSimilarDoctors = useCallback(async () => {
-    if (!doctor?.Specialty) return;
-    
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/doctors?specialty=${encodeURIComponent(doctor.Specialty)}`, {
-        signal: AbortSignal.timeout(8000), // 8 second timeout
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Unable to fetch similar doctors');
-      }
-
-      const data = await response.json();
-      
-      if (!data || !data.doctors || !Array.isArray(data.doctors)) {
-        throw new Error('Invalid response format');
-      }
-
-      const filtered = data.doctors
-        .filter((d: Doctor) => d["Doctor Name"] !== doctor["Doctor Name"])
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4);
-        
-      setSimilarDoctors(filtered);
-    } catch (error) {
-      console.error('Error fetching similar doctors:', error);
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          setError('Request timed out while fetching similar doctors.');
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setError('An unexpected error occurred while loading similar doctors.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [doctor?.Specialty, doctor?.["Doctor Name"]]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchSimilarDoctors();
-    return () => controller.abort();
-  }, [fetchSimilarDoctors]);
-
   const isValidUrl = (url: string) => {
     if (!url) return false;
     try {
-      const parsed = new URL(url);
-      // Check for common image extensions
-      return /\.(jpg|jpeg|png|gif|webp)$/i.test(parsed.pathname);
+      new URL(url);
+      return true;
     } catch (_) {
       return false;
     }
   };
 
-  if (!doctor) {
-    return (
-      <div className={styles.errorContainer}>
-        <h2>Doctor Information Not Available</h2>
-        <button 
-          onClick={() => router.push('/')}
-          className={styles.backButton}
-        >
-          Return to Home
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.doctorInfoContainer}>
-      <h1 className={styles.pageTitle}>
-        Dr. {doctor["Doctor Name"]} - {doctor.Specialty} Specialist
-      </h1>
-
       <div className={styles.mainContent}>
-        <div className={styles.profileHeader}>
-          <div className={styles.imageContainer}>
-            {isValidUrl(doctor["Photo URL"]) ? (
-              <img
-                src={doctor["Photo URL"]}
-                alt={doctor["Doctor Name"]}
-                className={styles.doctorImage}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                  target.src = '/placeholder-image.png';
-                }}
-              />
-            ) : (
-              <img
-                src="/placeholder-image.png"
-                alt="Doctor photo not available"
-                className={styles.doctorImage}
-              />
-            )}
-          </div>
-
-          <div className={styles.doctorDetails}>
-            <h2 className={styles.doctorName}>{doctor["Doctor Name"]}</h2>
-            <div className={styles.credentials}>
-              <p className={styles.specialty}>{doctor.Specialty}</p>
-              <p className={styles.designation}>{doctor.Designation}</p>
-              <p className={styles.workplace}>{doctor.Workplace}</p>
+        <section className={styles.profileSection}>
+          <div className={styles.profileHeader}>
+            <div className={styles.imageContainer}>
+              {isValidUrl(doctor["Photo URL"]) ? (
+                <Image
+                  src={doctor["Photo URL"]}
+                  alt={doctor["Doctor Name"]}
+                  className={styles.doctorImage}
+                  width={320}
+                  height={320}
+                  priority={true}
+                  quality={90}
+                  sizes="(max-width: 768px) 260px, 320px"
+                />
+              ) : (
+                <PlaceholderImage 
+                  width={320} 
+                  height={320} 
+                  className={styles.doctorImage}
+                />
+              )}
             </div>
-            <div className={styles.degree}>
-              <h3>Degrees & Certifications</h3>
-              <p>{doctor.Degree}</p>
-            </div>
-          </div>
-        </div>
 
-        <div className={styles.aboutSection}>
-          <h3>About Dr. {doctor["Doctor Name"]}</h3>
-          <p>{doctor.About}</p>
-        </div>
-
-        <div className={styles.similarDoctors}>
-          {isLoading ? (
-            <Loading />
-          ) : error ? (
-            <div className={styles.errorMessage}>
-              <p>{error}</p>
-              <button 
-                onClick={() => fetchSimilarDoctors()}
-                className={styles.retryButton}
-              >
-                Retry Loading Similar Doctors
-              </button>
-            </div>
-          ) : similarDoctors.length > 0 ? (
-            <>
-              <h3>Similar {doctor.Specialty} Specialists</h3>
-              <div className={styles.similarDoctorsGrid}>
-                {similarDoctors.map((similarDoctor) => (
-                  <Link
-                    href={`/${encodeURIComponent(similarDoctor["Doctor Name"])}`}
-                    key={similarDoctor["Doctor Name"]}
-                    className={styles.similarDoctorCard}
-                    onClick={() => {
-                      setSimilarDoctors([]);
-                      setError(null);
-                    }}
-                  >
-                    <div className={styles.cardImage}>
-                      {isValidUrl(similarDoctor["Photo URL"]) ? (
-                        <img
-                          src={similarDoctor["Photo URL"]}
-                          alt={similarDoctor["Doctor Name"]}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = '/placeholder-image.png';
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src="/placeholder-image.png"
-                          alt="Doctor photo not available"
-                        />
-                      )}
-                    </div>
-                    <div className={styles.cardInfo}>
-                      <h4>{similarDoctor["Doctor Name"]}</h4>
-                      <p>{similarDoctor.Designation}</p>
-                      <p className={styles.workplaceInfo}>{similarDoctor.Workplace}</p>
-                    </div>
-                  </Link>
-                ))}
+            <div className={styles.doctorDetails}>
+              <h1 className={styles.doctorName}>{doctor["Doctor Name"]}</h1>
+              <div className={styles.credentials}>
+                <p className={styles.specialty}>{doctor.Speciality}</p>
+                <p className={styles.designation}>{doctor.Designation}</p>
+                <p className={styles.workplace}>{doctor.Workplace}</p>
               </div>
-            </>
-          ) : null}
-        </div>
+              <div className={styles.degree}>
+                <h3>
+                  <FaGraduationCap style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+                  Degrees & Certifications
+                </h3>
+                <p>{doctor.Degree}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.aboutSection}>
+            <h3>About Dr. {doctor["Doctor Name"].split(' ')[0]}</h3>
+            <p>{doctor.About}</p>
+          </div>
+        </section>
+
+        <section className={styles.chamberSection}>
+          <h3 className={styles.sectionTitle}>Practice Information</h3>
+          <div className={styles.chamberCard}>
+            <div className={styles.chamberInfo}>
+              <div className={styles.infoGroup}>
+                <FaHospital className={styles.infoIcon} />
+                <div>
+                  <h4>Hospital</h4>
+                  <p>{doctor["Hospital Name"]}</p>
+                </div>
+              </div>
+
+              <div className={styles.infoGroup}>
+                <FaMapMarkerAlt className={styles.infoIcon} />
+                <div>
+                  <h4>Location</h4>
+                  <p>{doctor.Address}</p>
+                  <p className={styles.subText}>{doctor.Location}</p>
+                </div>
+              </div>
+
+              <div className={styles.infoGroup}>
+                <FaClock className={styles.infoIcon} />
+                <div>
+                  <h4>Visiting Hours</h4>
+                  <p>{doctor["Visiting Hours"]}</p>
+                </div>
+              </div>
+
+              <div className={styles.infoGroup}>
+                <FaPhoneAlt className={styles.infoIcon} />
+                <div>
+                  <h4>Appointment</h4>
+                  <a 
+                    href={`tel:${doctor["Appointment Number"]}`} 
+                    className={styles.phoneLink}
+                  >
+                    <FaPhoneAlt style={{ fontSize: '1rem' }} />
+                    {doctor["Appointment Number"]}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
